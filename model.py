@@ -10,8 +10,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class Model:
-    # DEVICE = "cuda"
-    DEVICE = "cpu"
+    DEVICE = "cuda"
     MODEL_NAME = "noahshinn024/santacoder-ts"
     MODEL_REVISION = "main"
     FIM_PREFIX = "<fim-prefix>"
