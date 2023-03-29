@@ -2,6 +2,8 @@
 
 A socket for the Rust client in [OpenTau](https://github.com/GammaTauAI/opentau) for type-inference using [SantaCoder](https://huggingface.co/bigcode/santacoder).
 
+The code was originally written by @arjunguha and later adapted by @mhyee, https://github.com/nuprl/TypeWeaver
+
 ### To run independently:
   - clone this repo
 ```bash
@@ -20,4 +22,3 @@ python ./main.py <socket path>
 python ./test_socket.py <socket path>
 ```
 
-The code was adapted from @mhyee, https://github.com/nuprl/TypeWeaver
