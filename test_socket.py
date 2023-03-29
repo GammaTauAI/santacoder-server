@@ -11,6 +11,7 @@ unix_socket.connect(SOCKET_PATH)
 payload = {
         "code": "function add(a: _hole_, b: _hole_) { return a + b }",
         "num_samples": 10,
+        "temperature": 1.0,
 }
 unix_socket.sendall(json.dumps(payload).encode("utf-8"))
 
