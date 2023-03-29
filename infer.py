@@ -132,14 +132,14 @@ class TypeInference:
         return self._infill_one(code)
 
 
-m = Model()
-type_inf = TypeInference(m)
 
-def infer(code: str, num_samples: int) -> List[str]:
+def infer(code: str, num_samples: int, temperature: float = 0.2) -> List[str]:
     """
     Generates `num_samples` type annotations for the first _hole_ in the given code.
     """
     assert num_samples > 0 
+    m = Model(temperature=temperature)
+    type_inf = TypeInference(m)
     type_annotations: List[str] = []
     while num_samples > 0:
         type_annotation = type_inf.infer(code)
