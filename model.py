@@ -6,11 +6,12 @@ Written by @mhyee. Originally from https://nuprl/TypeWeaver/main/SantaCoder/src/
 import os, torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+from typing import Union
+
 # This is necessary to avoid crazy warnings when the program creates a subprocess (forks).
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class Model:
-    DEVICE = "cuda"
     MODEL_NAME = "noahshinn024/santacoder-ts"
     MODEL_REVISION = "main"
     FIM_PREFIX = "<fim-prefix>"
@@ -22,20 +23,20 @@ class Model:
     def __init__(
         self,
         max_tokens: int = 50,
-        temperature: float = 0.2,
         top_p: float = 0.95,
-        max_context_length: int = 70
+        max_context_length: int = 70,
+        device: Union[int, str] = 0
     ):
         self.max_tokens = max_tokens
-        self.temperature = temperature
         self.top_p = top_p
         self.max_context_length = max_context_length
+        self.device = device
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.MODEL_NAME,
             revision=self.MODEL_REVISION,
             trust_remote_code=True
-        ).to(self.DEVICE)
+        ).to(self.device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.MODEL_NAME, padding_side="left")
@@ -60,7 +61,7 @@ class Model:
         stop = s.find(self.ENDOFTEXT, start) or len(s)
         return s[start:stop]
 
-    def infill(self, prefix_suffix_tuples):
+    def infill(self, prefix_suffix_tuples, temperature: float = 1.0):
         output_list = True
         if type(prefix_suffix_tuples) == tuple:
             prefix_suffix_tuples = [prefix_suffix_tuples]
@@ -74,7 +75,7 @@ class Model:
             return_tensors="pt",
             padding=True,
             return_token_type_ids=False
-        ).to(self.DEVICE)
+        ).to(self.device)
         max_length = inputs.input_ids[0].size(0) + self.max_tokens
 
         with torch.no_grad():
@@ -82,7 +83,7 @@ class Model:
                 **inputs,
                 do_sample=True,
                 top_p=self.top_p,
-                temperature=self.temperature,
+                temperature=temperature,
                 max_length=max_length,
                 pad_token_id=self.tokenizer.pad_token_id
             )

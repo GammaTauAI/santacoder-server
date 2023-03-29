@@ -1,6 +1,5 @@
 import sys
 import json
-import base64
 import socket
 
 assert len(sys.argv) == 2
@@ -10,7 +9,7 @@ unix_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 unix_socket.connect(SOCKET_PATH)
 payload = {
         "code": "function add(a: _hole_, b: _hole_) { return a + b }",
-        "num_samples": 10,
+        "num_samples": 2,
         "temperature": 1.0,
 }
 unix_socket.sendall(json.dumps(payload).encode("utf-8"))

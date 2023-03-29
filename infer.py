@@ -4,19 +4,20 @@ Adapted from @mhyee. Originally from https://nuprl/TypeWeaver/main/SantaCoder/sr
 """
 
 import re
-import subprocess
-from subprocess import PIPE
 
 from model import Model
 
 from typing import List
 
+INFILL_MARKER = "_hole_"
+
 class TypeInference:
-    INFILL_MARKER = "_hole_"
     FUNC_START_REGEX = re.compile(r"^.*function(\s+([a-zA-Z_$][\w_$]*))?\s*\(")
 
-    def __init__(self, model):
+    def __init__(self, model, max_length: int = 2048, temperature: float = 1.0):
         self.model = model
+        self.max_length = max_length
+        self.temperature = temperature
 
     def _templatize_function(self, line: str) -> str:
         """
@@ -38,7 +39,7 @@ class TypeInference:
             return line
 
         param_list = line[function_start:function_end].split(",")
-        param_list = f"{self.INFILL_MARKER},".join(param_list) + self.INFILL_MARKER
+        param_list = f"{INFILL_MARKER},".join(param_list) + INFILL_MARKER
         return line[:function_start] + param_list + line[function_end:]
 
     def _clip_text(self, str1: str, str2: str, max_length: int):
@@ -84,7 +85,7 @@ class TypeInference:
         giving up and returning `any`.
         """
         for _ in range(retries):
-            generated = self.model.infill((prefix, suffix))
+            generated = self.model.infill((prefix, suffix), self.temperature)
             print(generated)
 
             # Split on whitespace and keep only the first element
@@ -100,16 +101,16 @@ class TypeInference:
         """
         Split the template at the infill point and construct the prefix and suffix.
         """
-        parts = template.split(self.INFILL_MARKER, 1)
+        parts = template.split(INFILL_MARKER, 1)
         print(parts)
         if len(parts) < 2:
             raise ValueError(
-                f"Expected at least one {self.INFILL_MARKER} in template, but got {template}"
+                f"Expected at least one {INFILL_MARKER} in template, but got {template}"
             )
 
         infilled_prefix = parts[0]
         # TODO: generalize this for multiple languages (":" only works for typescript and python)
-        suffix = parts[1].replace(": " + self.INFILL_MARKER, "")
+        suffix = parts[1].replace(": " + INFILL_MARKER, "")
         # Clip the prefix and suffix to make sure they fit into the prompt
 
         print(f"\tleft:\n {infilled_prefix}\n\tright:\n {suffix}")
@@ -127,22 +128,27 @@ class TypeInference:
         Given code, infer the first type annotation. Returns the type-annotation
         as a string.
         """
-        if self.INFILL_MARKER not in code:
-            return code
+        if INFILL_MARKER not in code:
+            return ""
         return self._infill_one(code)
 
+def split_string(string: str, max_length: int) -> List[str]:
+    return [string[i : i + max_length] for i in range(0, len(string), max_length)]
 
-
-def infer(code: str, num_samples: int, temperature: float = 0.2) -> List[str]:
+def infer(model, code: str, num_samples: int, max_length: int = 2048, temperature: float = 1.0) -> List[str]:
     """
     Generates `num_samples` type annotations for the first _hole_ in the given code.
     """
     assert num_samples > 0 
-    m = Model(temperature=temperature)
-    type_inf = TypeInference(m)
+    type_inf = TypeInference(model, max_length, temperature)
     type_annotations: List[str] = []
     while num_samples > 0:
-        type_annotation = type_inf.infer(code)
-        type_annotations += [type_annotation]
-        num_samples -= 1
+        for split_code in split_string(code, max_length * 4):
+            if INFILL_MARKER in split_code:
+                type_annotation = ""
+                while type_annotation == "":
+                    type_annotation = type_inf.infer(split_code)
+                type_annotations += [type_annotation]
+                break
+        num_samples -=  1
     return type_annotations

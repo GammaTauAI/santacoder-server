@@ -13,7 +13,10 @@ pip install -r ./requirements.txt
 ```
   - start the socket
 ```bash
-python ./main.py <socket path>
+python main.py \
+  --socket_path <socket path> \
+  --device <gpu> \
+  --max_length 2048
 ```
   - test the socket with a request
 ```bash

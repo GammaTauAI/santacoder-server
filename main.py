@@ -1,25 +1,36 @@
 import os
 import sys
 import json
+import torch
 import socket
 import signal
+import argparse
 from threading import Thread
 from functools import partial
 
+from model import Model
 from infer import infer
 
 from typing import List
 
-assert len(sys.argv) == 2
-SOCKET_PATH = sys.argv[1]
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--socket_path", type=str, help="The path to the socket")
+    parser.add_argument("--device", type=str, default="0" if torch.cuda.is_available() else "cpu", help="The device for the model")
+    parser.add_argument("--max_length", type=int, default=2048, help="The max length for the context window")
+    args = parser.parse_args()
+    return args
+
+args = get_args()
+
 BUFF_SIZE = 4096
 
 # checks if in use
 try:
-    os.unlink(SOCKET_PATH)
+    os.unlink(args.socket_path)
 except OSError:
-    if os.path.exists(SOCKET_PATH):
-        print(f'{SOCKET_PATH} already exists')
+    if os.path.exists(args.socket_path):
+        print(f'{args.socket_path} already exists')
         sys.exit(1)
 
 # used to store and close all sockets before exit
@@ -58,7 +69,7 @@ def on_client(c: socket.socket) -> None:
             code = req["code"]
             num_samples = req["num_samples"]
             temperature = req["temperature"]
-            type_annotations: List[str] = infer(code, num_samples, temperature=temperature)
+            type_annotations: List[str] = infer(model, code, num_samples, args.max_length, temperature)
             print(f'Result: {type_annotations}')
             resp = json.dumps({
                 "type": "single",
@@ -79,14 +90,18 @@ def init_wait(s: socket.socket, sm: SocketManager) -> None:
 
 # called on exit signal
 def close(_, __, sm: SocketManager) -> None:
-    print(f'Closing {SOCKET_PATH}')
+    print(f'Closing {args.socket_path}')
     sm.close_all()
     sys.exit(0)
+
+# load model on device
+print(f'Loading SantaCoder on device: `{args.device}`')
+model = Model(device=args.device)
 
 # init socket manager
 sm = SocketManager()
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.bind(SOCKET_PATH)
+sock.bind(args.socket_path)
 sock.listen(1)
 # store socket for future close
 sm(sock)
@@ -94,7 +109,7 @@ sm(sock)
 # this should work but should be tested
 # other way is to use a lambdas
 signal.signal(signal.SIGINT, partial(close, sm)) # type: ignore
-print(f'Listening on {SOCKET_PATH}\n')
+print(f'Listening on {args.socket_path}\n')
 
 
 init_wait(sock, sm)
