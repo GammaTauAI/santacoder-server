@@ -44,7 +44,7 @@ do
     tmux new-session -d -s santa$i
 
     # run santa
-    tmux send-keys -t santa$i "python3 main.py --socket_path /tmp/santa$1.sock --device $1" C-m
+    tmux send-keys -t santa$i "python3 main.py --socket_path /tmp/santa$i.sock --device $i" C-m
 
     # detach from tmux session
     tmux detach -s santa$i
