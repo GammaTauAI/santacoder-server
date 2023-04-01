@@ -89,7 +89,11 @@ class TypeInference:
             print(generated)
 
             # Split on whitespace and keep only the first element
-            generated = generated.split()[0]
+            split = generated.split()
+            if len(split) == 0:
+                continue
+
+            generated = split[0]
             print(generated)
             if generated == "":
                 continue
