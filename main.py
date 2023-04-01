@@ -96,7 +96,7 @@ def close(_, __, sm: SocketManager) -> None:
 
 # load model on device
 print(f'Loading SantaCoder on device: `{args.device}`')
-model = Model(device=args.device)
+model = Model(device=int(args.device))
 
 # init socket manager
 sm = SocketManager()
