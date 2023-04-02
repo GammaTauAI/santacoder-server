@@ -56,15 +56,21 @@ def recvall(s: socket.socket) -> bytes:
             break
     return data
 
+END_TOKEN = "??END??"
 # handles a single client
 def on_client(c: socket.socket) -> None:
     try:
+        complete_data = ""
         while True:
             data = recvall(c).decode("utf-8")
             if len(data) == 0:
                 break
+            if not data.endswith(END_TOKEN):
+                complete_data += data
+                continue
+            complete_data += data[:-len(END_TOKEN)]
 
-            req = json.loads(data)
+            req = json.loads(complete_data)
             print(f'Received {req}')
             code = req["code"]
             num_samples = req["num_samples"]
