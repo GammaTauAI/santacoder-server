@@ -3,13 +3,15 @@ Written by @mhyee. Originally from https://nuprl/TypeWeaver/main/SantaCoder/src/
 
 """
 
-import os, torch
+import os
+import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from typing import Union
 
 # This is necessary to avoid crazy warnings when the program creates a subprocess (forks).
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 
 class Model:
     MODEL_NAME = "noahshinn024/santacoder-ts"
@@ -61,13 +63,19 @@ class Model:
         stop = s.find(self.ENDOFTEXT, start) or len(s)
         return s[start:stop]
 
-    def infill(self, prefix_suffix_tuples, temperature: float = 1.0):
+    def infill(self, prefix_suffix_tuples, temperature: float = 1.0, mode: str = "PSM"):
         output_list = True
         if type(prefix_suffix_tuples) == tuple:
             prefix_suffix_tuples = [prefix_suffix_tuples]
             output_list = False
-        prompts = [f"{self.FIM_PREFIX}{p}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}"
-                for p, s in prefix_suffix_tuples]
+        if mode == "PSM":
+            prompts = [f"{self.FIM_PREFIX}{p}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}"
+                       for p, s in prefix_suffix_tuples]
+        elif mode == "SPM":
+            prompts = [f"{self.FIM_PREFIX}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}{p}{s}{self.FIM_MIDDLE}"
+                       for p, s in prefix_suffix_tuples]
+        else:
+            raise ValueError("Invalid mode. Must be PSM or SPM.")
 
         # `return_token_type_ids=False` is essential, or we get nonsense output.
         inputs = self.tokenizer(

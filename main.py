@@ -18,6 +18,7 @@ def get_args():
     parser.add_argument("--socket_path", type=str, help="The path to the socket")
     parser.add_argument("--device", type=str, default="0" if torch.cuda.is_available() else "cpu", help="The device for the model")
     parser.add_argument("--max_length", type=int, default=2048, help="The max length for the context window")
+    parser.add_argument("--mode", type=str, default="PSM", help="The mode for FIM (PSM, SPM)")
     args = parser.parse_args()
     return args
 
@@ -75,7 +76,7 @@ def on_client(c: socket.socket) -> None:
             code = req["code"]
             num_samples = req["num_samples"]
             temperature = req["temperature"]
-            type_annotations: List[str] = infer(model, code, num_samples, args.max_length, temperature)
+            type_annotations: List[str] = infer(model, code, num_samples, args.mode, args.max_length, temperature)
             print(f'Result: {type_annotations}')
             resp = json.dumps({
                 "type": "single",

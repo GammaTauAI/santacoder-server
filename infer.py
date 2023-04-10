@@ -77,7 +77,7 @@ class TypeInference:
             str2 = _prefix_ending_with_newline(str2, max_length // 2)
         return str1, str2
 
-    def _generate_valid_type(self, prefix: str, suffix: str, retries: int) -> str:
+    def _generate_valid_type(self, prefix: str, suffix: str, retries: int, mode: str) -> str:
         """
         Given a prefix and suffix for infilling, try to generate a valid
         TypeScript type. To determine if it is valid, we use an external
@@ -85,7 +85,7 @@ class TypeInference:
         giving up and returning `any`.
         """
         for _ in range(retries):
-            generated = self.model.infill((prefix, suffix), self.temperature)
+            generated = self.model.infill((prefix, suffix), self.temperature, mode)
             print(generated)
 
             # Split on whitespace and keep only the first element
@@ -101,7 +101,7 @@ class TypeInference:
             return generated.strip()
         return "any"
 
-    def _infill_one(self, template: str) -> str:
+    def _infill_one(self, template: str, mode: str) -> str:
         """
         Split the template at the infill point and construct the prefix and suffix.
         """
@@ -123,23 +123,23 @@ class TypeInference:
             infilled_prefix, suffix, self.model.max_context_length
         )
         filled_type = self._generate_valid_type(
-            clipped_prefix, clipped_suffix, retries=3
+            clipped_prefix, clipped_suffix, retries=3, mode=mode
         )
         return filled_type
 
-    def infer(self, code: str) -> str:
+    def infer(self, code: str, mode: str) -> str:
         """
         Given code, infer the first type annotation. Returns the type-annotation
         as a string.
         """
         if INFILL_MARKER not in code:
             return ""
-        return self._infill_one(code)
+        return self._infill_one(code, mode=mode)
 
 def split_string(string: str, max_length: int) -> List[str]:
     return [string[i : i + max_length] for i in range(0, len(string), max_length)]
 
-def infer(model, code: str, num_samples: int, max_length: int = 2048, temperature: float = 1.0) -> List[str]:
+def infer(model, code: str, num_samples: int, mode: str, max_length: int = 2048, temperature: float = 1.0) -> List[str]:
     """
     Generates `num_samples` type annotations for the first _hole_ in the given code.
     """
@@ -151,7 +151,7 @@ def infer(model, code: str, num_samples: int, max_length: int = 2048, temperatur
             if INFILL_MARKER in split_code:
                 type_annotation = ""
                 while type_annotation == "":
-                    type_annotation = type_inf.infer(split_code)
+                    type_annotation = type_inf.infer(split_code, mode=mode)
                 type_annotations += [type_annotation]
                 break
         num_samples -=  1
