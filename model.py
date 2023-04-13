@@ -72,7 +72,7 @@ class Model:
             prompts = [f"{self.FIM_PREFIX}{p}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}"
                        for p, s in prefix_suffix_tuples]
         elif mode == "SPM":
-            prompts = [f"{self.FIM_PREFIX}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}{p}{s}{self.FIM_MIDDLE}"
+            prompts = [f"{self.FIM_PREFIX}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}{p}{self.FIM_MIDDLE}"
                        for p, s in prefix_suffix_tuples]
         else:
             raise ValueError("Invalid mode. Must be PSM or SPM.")
