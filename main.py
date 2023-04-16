@@ -122,7 +122,10 @@ def close(_, __, sm: SocketManager) -> None:
 
 # load model on device
 print(f'Loading SantaCoder on device: `{args.device}`')
-device = torch.device(args.device)
+if args.device == "cpu":
+    device = torch.device("cpu")
+else:
+    device = torch.device("cuda", int(args.device))
 model = Model(device=device)
 
 # init socket manager
