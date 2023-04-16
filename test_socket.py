@@ -7,12 +7,23 @@ SOCKET_PATH = sys.argv[1]
 
 unix_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 unix_socket.connect(SOCKET_PATH)
+CODE = """
+export class Vector {
+    constructor(public components: _hole_ = [0, 0, 0, 1]) { }
+    toArray(Constructor: _hole_ = Array): _hole_ {
+        return new Constructor(this.components);
+    }
+    toString(): _hole_ {
+        return `(${this.components.join(",")})`;
+    }
+}
+"""
 payload = {
-        "code": "function add(a: _hole_, b: _hole_) { return a + b }",
+        "code": CODE,
         "num_samples": 2,
         "temperature": 1.0,
 }
-unix_socket.sendall(json.dumps(payload).encode("utf-8"))
+unix_socket.sendall(json.dumps(payload).encode("utf-8") + b"??END??")
 
 response = unix_socket.recv(1024).decode("utf-8")
 # print("response: {}".format(response))

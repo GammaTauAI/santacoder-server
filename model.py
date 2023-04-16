@@ -27,7 +27,7 @@ class Model:
         max_tokens: int = 50,
         top_p: float = 0.95,
         max_context_length: int = 70,
-        device: Union[int, str] = 0
+        device: Union[int, str, torch.device] = 0
     ):
         self.max_tokens = max_tokens
         self.top_p = top_p
@@ -68,10 +68,13 @@ class Model:
         if type(prefix_suffix_tuples) == tuple:
             prefix_suffix_tuples = [prefix_suffix_tuples]
             output_list = False
+
+        print(f"prefix_suffix_tuples: {prefix_suffix_tuples}")
+
         if mode == "PSM":
             prompts = [f"{self.FIM_PREFIX}{p}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}"
                        for p, s in prefix_suffix_tuples]
-        elif mode == "SPM":
+        elif mode == "SPM": # variant 2
             prompts = [f"{self.FIM_PREFIX}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}{p}"
                        for p, s in prefix_suffix_tuples]
         else:

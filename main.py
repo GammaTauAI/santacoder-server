@@ -13,14 +13,20 @@ from infer import infer
 
 from typing import List
 
+
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--socket_path", type=str, help="The path to the socket")
-    parser.add_argument("--device", type=str, default="0" if torch.cuda.is_available() else "cpu", help="The device for the model")
-    parser.add_argument("--max_length", type=int, default=2048, help="The max length for the context window")
-    parser.add_argument("--mode", type=str, default="PSM", help="The mode for FIM (PSM, SPM)")
+    parser.add_argument("--socket_path", type=str,
+                        help="The path to the socket")
+    parser.add_argument("--device", type=str, default="0" if torch.cuda.is_available()
+                        else "cpu", help="The device for the model")
+    parser.add_argument("--max_length", type=int, default=2048,
+                        help="The max length for the context window")
+    parser.add_argument("--mode", type=str, default="PSM",
+                        help="The mode for FIM (PSM, SPM)")
     args = parser.parse_args()
     return args
+
 
 args = get_args()
 
@@ -35,6 +41,8 @@ except OSError:
         sys.exit(1)
 
 # used to store and close all sockets before exit
+
+
 class SocketManager:
     def __init__(self) -> None:
         self._sockets = set()
@@ -48,6 +56,8 @@ class SocketManager:
             s.close()
 
 # an unbounded recv
+
+
 def recvall(s: socket.socket) -> bytes:
     data = b''
     while True:
@@ -57,8 +67,11 @@ def recvall(s: socket.socket) -> bytes:
             break
     return data
 
+
 END_TOKEN = "??END??"
 # handles a single client
+
+
 def on_client(c: socket.socket) -> None:
     try:
         complete_data = ""
@@ -76,18 +89,21 @@ def on_client(c: socket.socket) -> None:
             code = req["code"]
             num_samples = req["num_samples"]
             temperature = req["temperature"]
-            type_annotations: List[str] = infer(model, code, num_samples, args.mode, args.max_length, temperature)
+            type_annotations: List[str] = infer(
+                model, code, num_samples, args.mode, args.max_length, temperature)
             print(f'Result: {type_annotations}')
             resp = json.dumps({
                 "type": "single",
                 'type_annotations': [item for item in type_annotations]
-            }).encode("utf-8") # [Vec<String>]
+            }).encode("utf-8")  # [Vec<String>]
             print(f'Sending {resp}')
             c.sendall(resp)
     finally:
         c.close()
 
 # listen for clients
+
+
 def init_wait(s: socket.socket, sm: SocketManager) -> None:
     while True:
         c, _ = s.accept()
@@ -96,14 +112,18 @@ def init_wait(s: socket.socket, sm: SocketManager) -> None:
         thread.start()
 
 # called on exit signal
+
+
 def close(_, __, sm: SocketManager) -> None:
     print(f'Closing {args.socket_path}')
     sm.close_all()
     sys.exit(0)
 
+
 # load model on device
 print(f'Loading SantaCoder on device: `{args.device}`')
-model = Model(device=int(args.device))
+device = torch.device(args.device)
+model = Model(device=device)
 
 # init socket manager
 sm = SocketManager()
@@ -115,7 +135,7 @@ sm(sock)
 
 # this should work but should be tested
 # other way is to use a lambdas
-signal.signal(signal.SIGINT, partial(close, sm)) # type: ignore
+signal.signal(signal.SIGINT, partial(close, sm))  # type: ignore
 print(f'Listening on {args.socket_path}\n')
 
 
