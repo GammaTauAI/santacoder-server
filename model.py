@@ -7,14 +7,14 @@ import os
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from typing import Union
+from typing import Union, List
 
 # This is necessary to avoid crazy warnings when the program creates a subprocess (forks).
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 class Model:
-    MODEL_NAME = "noahshinn024/santacoder-ts"
+    MODEL_NAME = "gammatau/santacoder-ts-fim"
     MODEL_REVISION = "main"
     FIM_PREFIX = "<fim-prefix>"
     FIM_MIDDLE = "<fim-middle>"
@@ -74,7 +74,7 @@ class Model:
         if mode == "PSM":
             prompts = [f"{self.FIM_PREFIX}{p}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}"
                        for p, s in prefix_suffix_tuples]
-        elif mode == "SPM": # variant 2
+        elif mode == "SPM":  # variant 2
             prompts = [f"{self.FIM_PREFIX}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}{p}"
                        for p, s in prefix_suffix_tuples]
         else:

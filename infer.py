@@ -15,10 +15,12 @@ INFILL_MARKER = "_hole_"
 class TypeInference:
     FUNC_START_REGEX = re.compile(r"^.*function(\s+([a-zA-Z_$][\w_$]*))?\s*\(")
 
-    def __init__(self, model, max_length: int = 2048, temperature: float = 1.0):
+    def __init__(self, model, max_length: int = 2048, temperature: float = 1.0, mode: str = "PSM", num_comps: int = 1):
         self.model = model
         self.max_length = max_length
         self.temperature = temperature
+        self.mode = mode
+        self.num_comps = num_comps
 
     def clip_prompt(self, prefix: str, suffix: str, max_length: int):
         """
@@ -44,7 +46,7 @@ class TypeInference:
 
         return prefix, suffix
 
-    def _generate_valid_type(self, prefix: str, suffix: str, retries: int, mode: str) -> str:
+    def _generate_valid_types(self, prefix: str, suffix: str, retries: int) -> List[str]:
         """
         Given a prefix and suffix for infilling, try to generate a valid
         TypeScript type. To determine if it is valid, we use an external
@@ -53,16 +55,20 @@ class TypeInference:
         """
         for _ in range(retries):
             generated = self.model.infill(
-                (prefix, suffix), self.temperature, mode)
+                [(prefix, suffix)] * self.num_comps, self.temperature, self.mode)
 
-            generated_strip = generated.strip()
-            if generated_strip == "":
+            checked_not_empty = []
+            for g in generated:
+                if g.strip() != "":
+                    checked_not_empty.append(g.strip())
+
+            if len(checked_not_empty) == 0:
                 continue
 
-            return generated.strip()
-        return "any"
+            return checked_not_empty
+        return ["any"]
 
-    def _infill_one(self, template: str, mode: str) -> str:
+    def _infill_one(self, template: str) -> List[str]:
         """
         Split the template at the infill point and construct the prefix and suffix.
         """
@@ -87,30 +93,25 @@ class TypeInference:
         print(
             f"\tclipped left:\n {clipped_prefix}\n\tclipped right:\n {clipped_suffix}")
 
-        filled_type = self._generate_valid_type(
-            clipped_prefix, clipped_suffix, retries=3, mode=mode
+        filled_types = self._generate_valid_types(
+            clipped_prefix, clipped_suffix, retries=3
         )
-        return filled_type
+        return filled_types
 
-    def infer(self, code: str, mode: str) -> str:
+    def infer(self, code: str) -> List[str]:
         """
         Given code, infer the first type annotation. Returns the type-annotation
         as a string.
         """
         if INFILL_MARKER not in code:
-            return ""
-        return self._infill_one(code, mode=mode)
+            return []
+        return self._infill_one(code)
 
 
-def infer(model, code: str, num_samples: int, mode: str, max_length: int = 2048, temperature: float = 1.0) -> List[str]:
+def infer(model, code: str, num_comps: int, mode: str, max_length: int = 2048, temperature: float = 1.0) -> List[str]:
     """
     Generates `num_samples` type annotations for the first _hole_ in the given code.
     """
-    assert num_samples > 0
-    type_inf = TypeInference(model, max_length, temperature)
-    type_annotations: List[str] = []
-    while num_samples > 0:
-        type_annotation = type_inf.infer(code, mode=mode)
-        type_annotations += [type_annotation]
-        num_samples -= 1
-    return type_annotations
+    assert num_comps > 0
+    type_inf = TypeInference(model, max_length, temperature, mode, num_comps)
+    return type_inf.infer(code)
