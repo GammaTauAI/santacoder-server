@@ -29,22 +29,29 @@ class TypeInference:
         should be clipped. If both already fit within `max_length`, then do
         nothing.
         """
+        # we need at least 2 characters to show something
+        assert max_length >= 2
 
         prefix_len = len(prefix)
         suffix_len = len(suffix)
+
         if prefix_len + suffix_len <= max_length:
-            return prefix, suffix  # Nothing to do
+            return prefix, suffix  # nothing to do
 
-        max_suffix_length = int(max_length / 2)
-        max_prefix_length = max_length - max_suffix_length
+        # distribute 3/4 of the max length to the prefix and 1/4 to the suffix
+        prefix_max = int(max_length * 0.75)
+        suffix_max = max_length - prefix_max
 
-        if prefix_len > max_prefix_length:
-            prefix = prefix[-max_prefix_length:]
+        # remember: we want to clip the start of the prefix and the end of the suffix
+        # also, if we have leftover of the prefix, we want to give it to the suffix
+        prefix_len = min(prefix_max, prefix_len)
+        suffix_len = min(suffix_max, suffix_len)
 
-        if suffix_len > max_suffix_length:
-            suffix = suffix[:max_suffix_length]
+        # if we have leftover of the prefix, we want to give it to the suffix
+        leftover = max_length - prefix_len - suffix_len
+        suffix_len += leftover
 
-        return prefix, suffix
+        return prefix[-prefix_len:], suffix[:suffix_len]
 
     def _generate_valid_types(self, prefix: str, suffix: str, retries: int) -> List[str]:
         """
