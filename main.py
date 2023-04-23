@@ -139,7 +139,7 @@ sm(sock)
 # this should work but should be tested
 # other way is to use a lambdas
 signal.signal(signal.SIGINT, partial(close, sm))  # type: ignore
-print(f'Listening on {args.socket_path}\n')
+print(f'Listening on {args.socket_path}\n', flush=True)
 
 
 init_wait(sock, sm)
