@@ -7,7 +7,7 @@ import os
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from typing import Union, List
+from typing import Union
 
 # This is necessary to avoid crazy warnings when the program creates a subprocess (forks).
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -26,12 +26,10 @@ class Model:
         self,
         max_tokens: int = 50,
         top_p: float = 0.95,
-        max_context_length: int = 70,
         device: Union[int, str, torch.device] = 0
     ):
         self.max_tokens = max_tokens
         self.top_p = top_p
-        self.max_context_length = max_context_length
         self.device = device
 
         self.model = AutoModelForCausalLM.from_pretrained(

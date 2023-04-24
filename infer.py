@@ -15,7 +15,7 @@ INFILL_MARKER = "_hole_"
 class TypeInference:
     FUNC_START_REGEX = re.compile(r"^.*function(\s+([a-zA-Z_$][\w_$]*))?\s*\(")
 
-    def __init__(self, model, max_length: int = 2048, temperature: float = 1.0, mode: str = "PSM", num_comps: int = 1):
+    def __init__(self, model: Model, max_length: int = 2048, temperature: float = 1.0, mode: str = "PSM", num_comps: int = 1):
         self.model = model
         self.max_length = max_length
         self.temperature = temperature
@@ -115,7 +115,7 @@ class TypeInference:
         return self._infill_one(code)
 
 
-def infer(model, code: str, num_comps: int, mode: str, max_length: int = 2048, temperature: float = 1.0) -> List[str]:
+def infer(model: Model, code: str, num_comps: int, mode: str, max_length: int = 2048, temperature: float = 1.0) -> List[str]:
     """
     Generates `num_samples` type annotations for the first _hole_ in the given code.
     """
