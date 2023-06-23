@@ -80,7 +80,6 @@ class TypeInference:
         Split the template at the infill point and construct the prefix and suffix.
         """
         parts = template.split(INFILL_MARKER, 1)
-        print(parts)
         if len(parts) < 2:
             raise ValueError(
                 f"Expected at least one {INFILL_MARKER} in template, but got {template}"
@@ -90,8 +89,6 @@ class TypeInference:
         # TODO: generalize this for multiple languages (":" only works for typescript and python)
         suffix = parts[1].replace(": " + INFILL_MARKER, "")
         # Clip the prefix and suffix to make sure they fit into the prompt
-
-        print(f"\tleft:\n {infilled_prefix}\n\tright:\n {suffix}")
 
         clipped_prefix, clipped_suffix = self.clip_prompt(
             infilled_prefix, suffix, self.max_length

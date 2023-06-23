@@ -67,8 +67,6 @@ class Model:
             prefix_suffix_tuples = [prefix_suffix_tuples]
             output_list = False
 
-        print(f"prefix_suffix_tuples: {prefix_suffix_tuples}")
-
         if mode == "PSM":
             prompts = [f"{self.FIM_PREFIX}{p}{self.FIM_SUFFIX}{s}{self.FIM_MIDDLE}"
                        for p, s in prefix_suffix_tuples]

@@ -85,7 +85,6 @@ def on_client(c: socket.socket) -> None:
             complete_data += data[:-len(END_TOKEN)]
 
             req = json.loads(complete_data)
-            print(f'Received {req}')
             code = req["code"]
             num_samples = req["num_samples"]
             temperature = req["temperature"]
@@ -96,7 +95,6 @@ def on_client(c: socket.socket) -> None:
                 "type": "single",
                 'type_annotations': [item for item in type_annotations]
             }).encode("utf-8")  # [Vec<String>]
-            print(f'Sending {resp}')
             c.sendall(resp)
     finally:
         c.close()
