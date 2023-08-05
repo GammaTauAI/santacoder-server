@@ -5,11 +5,11 @@
 # and will create a tmux session named santa[$1]
 # WARNING: it will delete any /tmp/santa[$1].sock files found
 
-# usage: ./multi_gpu_spawn.sh [num_of_gpus]
+# usage: ./multi_gpu_spawn.sh [num_of_gpus] [model_name] [context size]
 
 # check args
-if [ $# -ne 1 ]; then
-    echo "usage: ./multi_gpu_spawn.sh [num_of_gpus]" >&2
+if [ $# -ne 3 ]; then
+    echo "usage: ./multi_gpu_spawn.sh [num_of_gpus] [model_name] [context size]"
     exit 1
 fi
 
@@ -44,7 +44,7 @@ do
     tmux new-session -d -s santa$i
 
     # run santa
-    tmux send-keys -t santa$i "python3 main.py --socket_path /tmp/santa$i.sock --device $i" C-m
+    tmux send-keys -t santa$i "MODEL_NAME=$2 python3 main.py --socket_path /tmp/santa$i.sock --device $i --max_length $3" C-m
 
     # detach from tmux session
     tmux detach -s santa$i
