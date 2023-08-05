@@ -101,6 +101,7 @@ class Model:
             outputs = self.model.generate(
                 **inputs,
                 do_sample=True,
+                use_cache=True,
                 top_p=self.top_p,
                 temperature=temperature,
                 max_length=max_length,
