@@ -13,21 +13,33 @@ from typing import Union
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-class Model:
-    MODEL_NAME = "gammatau/santacoder-ts-fim"
-    MODEL_REVISION = "main"
-    FIM_PREFIX = "<fim-prefix>"
-    FIM_MIDDLE = "<fim-middle>"
-    FIM_SUFFIX = "<fim-suffix>"
-    FIM_PAD = "<fim-pad>"
-    ENDOFTEXT = "<|endoftext|>"
+def get_tokens_from_name(model_name):
+    if "santacoder" in model_name:
+        return ["<fim-prefix>", "<fim-middle>", "<fim-suffix>", "<fim-pad>"]
+    elif "starcoder" in model_name:
+        return ["<fim_prefix>", "<fim_middle>", "<fim_suffix>", "<fim_pad>"]
+    else:
+        raise ValueError(
+            "Invalid model name. Must include either 'santacoder' or 'starcoder'.")
 
+
+class Model:
     def __init__(
         self,
         max_tokens: int = 50,
         top_p: float = 0.95,
         device: Union[int, str, torch.device] = 0
     ):
+        self.MODEL_NAME = "gammatau/santacoder-ts-fim"
+        if os.environ.get("MODEL_NAME"):
+            self.MODEL_NAME = os.environ["MODEL_NAME"]
+        self.MODEL_REVISION = "main"
+        toks = get_tokens_from_name(self.MODEL_NAME)
+        self.FIM_PREFIX = toks[0]
+        self.FIM_MIDDLE = toks[1]
+        self.FIM_SUFFIX = toks[2]
+        self.FIM_PAD = toks[3]
+        self.ENDOFTEXT = "<|endoftext|>"
         self.max_tokens = max_tokens
         self.top_p = top_p
         self.device = device
