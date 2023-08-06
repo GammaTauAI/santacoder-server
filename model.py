@@ -47,7 +47,8 @@ class Model:
         self.model = AutoModelForCausalLM.from_pretrained(
             self.MODEL_NAME,
             revision=self.MODEL_REVISION,
-            trust_remote_code=True
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16
         ).to(self.device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(
