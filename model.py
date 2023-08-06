@@ -52,7 +52,8 @@ class Model:
         ).to(self.device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(
-            self.MODEL_NAME, padding_side="left")
+            self.MODEL_NAME, padding_side="left", truncation=True,
+            max_length=self.model.config.n_positions)
 
         # Note that the special tokens must be listed in the order below.
         self.tokenizer.add_special_tokens({
