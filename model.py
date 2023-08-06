@@ -53,7 +53,7 @@ class Model:
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.MODEL_NAME, padding_side="left", truncation=True,
-            max_length=self.model.config.n_positions)
+            max_length=self.model.config.n_positions - self.max_tokens)
 
         # Note that the special tokens must be listed in the order below.
         self.tokenizer.add_special_tokens({
