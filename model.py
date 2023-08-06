@@ -52,8 +52,7 @@ class Model:
         ).to(self.device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(
-            self.MODEL_NAME, padding_side="left", truncation=True,
-            max_length=self.model.config.n_positions - self.max_tokens)
+            self.MODEL_NAME, padding_side="left")
 
         # Note that the special tokens must be listed in the order below.
         self.tokenizer.add_special_tokens({
@@ -95,7 +94,9 @@ class Model:
             prompts,
             return_tensors="pt",
             padding=True,
-            return_token_type_ids=False
+            return_token_type_ids=False,
+            truncation=True,
+            max_length=self.model.config.n_positions - self.max_tokens - 1,
         ).to(self.device)
         max_length = inputs.input_ids[0].size(0) + self.max_tokens
 
