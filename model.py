@@ -26,7 +26,7 @@ def get_tokens_from_name(model_name):
 class Model:
     def __init__(
         self,
-        max_tokens: int = 50,
+        max_tokens: int = 100,
         top_p: float = 0.95,
         device: Union[int, str, torch.device] = 0
     ):
@@ -88,6 +88,8 @@ class Model:
                        for p, s in prefix_suffix_tuples]
         else:
             raise ValueError("Invalid mode. Must be PSM or SPM.")
+
+        print(prompts)
 
         # `return_token_type_ids=False` is essential, or we get nonsense output.
         inputs = self.tokenizer(

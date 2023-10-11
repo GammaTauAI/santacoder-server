@@ -24,26 +24,27 @@ class TypeInference:
 
     def clip_prompt(self, prefix: str, suffix: str, max_length: int):
         """
-        Clip the prefix and suffix to be at most `max_length` characters long.
+        Clip the prefix and suffix to be at most `max_length` tokens long.
         The start of the prefix should be clipped, and the end of the suffix
         should be clipped. If both already fit within `max_length`, then do
         nothing.
         """
-        # we need at least 2 characters to show something
+        # we need at least 2 tokens to show something
         assert max_length >= 2
 
         # TODO: this encode-decode stuff is very inefficient,
         # but works for now for the current design
 
         # encode prefix and suffix
-        prefix = self.model.tokenizer.encode(prefix)
-        suffix = self.model.tokenizer.encode(suffix)
+        prefix_t = self.model.tokenizer.encode(prefix)
+        suffix_t = self.model.tokenizer.encode(suffix)
 
-        prefix_len = len(prefix)
-        suffix_len = len(suffix)
+        prefix_len = len(prefix_t)
+        suffix_len = len(suffix_t)
 
         if prefix_len + suffix_len <= max_length:
-            return prefix, suffix  # nothing to do
+            # nothing to do
+            return prefix, suffix
 
         # distribute 3/4 of the max length to the prefix and 1/4 to the suffix
         prefix_max = int(max_length * 0.75)
@@ -58,10 +59,10 @@ class TypeInference:
         leftover = max_length - prefix_len - suffix_len
         suffix_len += leftover
 
-        prefix = self.model.tokenizer.decode(prefix[:prefix_len])
-        suffix = self.model.tokenizer.decode(suffix[-suffix_len:])
+        prefix_t = self.model.tokenizer.decode(prefix_t[:prefix_len])
+        suffix_t = self.model.tokenizer.decode(suffix_t[-suffix_len:])
 
-        return prefix, suffix
+        return prefix_t, suffix_t
 
     def _generate_valid_types(self, prefix: str, suffix: str, retries: int) -> List[str]:
         """
@@ -103,7 +104,7 @@ class TypeInference:
         clipped_prefix, clipped_suffix = self.clip_prompt(
             infilled_prefix,
             suffix,
-            self.max_length - 50,  # need 50 toks for generating the type
+            self.max_length - 100,  # 100 tokens for the type generation
         )
 
         print(
