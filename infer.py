@@ -32,6 +32,13 @@ class TypeInference:
         # we need at least 2 characters to show something
         assert max_length >= 2
 
+        # TODO: this encode-decode stuff is very inefficient,
+        # but works for now for the current design
+
+        # encode prefix and suffix
+        prefix = self.model.tokenizer.encode(prefix)
+        suffix = self.model.tokenizer.encode(suffix)
+
         prefix_len = len(prefix)
         suffix_len = len(suffix)
 
@@ -51,7 +58,10 @@ class TypeInference:
         leftover = max_length - prefix_len - suffix_len
         suffix_len += leftover
 
-        return prefix[-prefix_len:], suffix[:suffix_len]
+        prefix = self.model.tokenizer.decode(prefix[:prefix_len])
+        suffix = self.model.tokenizer.decode(suffix[-suffix_len:])
+
+        return prefix, suffix
 
     def _generate_valid_types(self, prefix: str, suffix: str, retries: int) -> List[str]:
         """
@@ -91,7 +101,9 @@ class TypeInference:
         # Clip the prefix and suffix to make sure they fit into the prompt
 
         clipped_prefix, clipped_suffix = self.clip_prompt(
-            infilled_prefix, suffix, self.max_length
+            infilled_prefix,
+            suffix,
+            self.max_length - 50,  # need 50 toks for generating the type
         )
 
         print(
